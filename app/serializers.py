@@ -2,7 +2,6 @@ from rest_framework import serializers
 from .models import *
 
 
-
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -22,12 +21,10 @@ class UserCreateSerializer(serializers.ModelSerializer):
         return user
 
 
-
 class StoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
         fields = "__all__"
-
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -42,7 +39,6 @@ class SubcategorySerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
@@ -55,12 +51,10 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
         fields = "__all__"
-
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -78,7 +72,6 @@ class CartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Cart
         fields = ["id", "items"]
-
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -107,7 +100,6 @@ class CreateOrderSerializer(serializers.Serializer):
             attrs["billing_address"] = Address.objects.get(id=attrs["billing_address_id"])
         except Address.DoesNotExist:
             raise serializers.ValidationError("invalid_address")
-
         return attrs
 
 
@@ -116,7 +108,6 @@ class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
         fields = "__all__"
-
 
 
 class InvoiceSerializer(serializers.ModelSerializer):

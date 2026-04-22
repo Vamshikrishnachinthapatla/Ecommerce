@@ -5,10 +5,8 @@ from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
-
 from .models import *
 from .serializers import *
-
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -28,7 +26,6 @@ class IsStoreStaffOrAdmin(permissions.BasePermission):
         return user.is_admin or user.is_store_owner or user.is_store_staff
 
 
-
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.filter(is_deleted=False)
     serializer_class = UserSerializer
@@ -44,7 +41,6 @@ class RegisterView(APIView):
             "message": "user_created",
             "data": UserSerializer(user).data
         })
-
 
 
 class StoreViewSet(viewsets.ModelViewSet):
@@ -65,19 +61,16 @@ class SubcategoryViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAdminOrReadOnly]
 
 
-
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_deleted=False)
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description"]
-
     permission_classes = [IsStoreStaffOrAdmin]
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
             return ProductCreateUpdateSerializer
         return ProductSerializer
-
 
 
 class AddressViewSet(viewsets.ModelViewSet):
@@ -87,7 +80,6 @@ class AddressViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
 
 
 class CartView(APIView):
@@ -105,10 +97,8 @@ class AddToCartView(APIView):
         try:
             product = get_object_or_404(Product, id=request.data.get("product_id"))
             qty = int(request.data.get("quantity", 1))
-
             cart, _ = Cart.objects.get_or_create(user=request.user)
             item, created = CartItem.objects.get_or_create(cart=cart, product=product)
-
             item.quantity = qty if created else item.quantity + qty
             item.save()
 
@@ -133,7 +123,6 @@ class RemoveFromCartView(APIView):
         )
         item.delete()
         return Response({"message": "removed_from_cart"})
-
 
 
 class OrderViewSet(viewsets.ModelViewSet):
@@ -202,7 +191,6 @@ class OrderViewSet(viewsets.ModelViewSet):
         })
 
 
-
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.filter(is_deleted=False)
     serializer_class = PaymentSerializer
@@ -215,8 +203,6 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
 
-# ---------------- AUTH ----------------
-# AdminLoginView
 class AdminLoginView(APIView):
     def post(self, request):
         user = User.objects.filter(email=request.data.get("email")).first()
@@ -231,7 +217,7 @@ class AdminLoginView(APIView):
 
         return Response({"error": "invalid_credentials"}, status=401)
 
-#customer login view
+
 class CustomerLoginView(APIView):
     def post(self, request):
         user = User.objects.filter(mobile_number=request.data.get("mobile_number")).first()

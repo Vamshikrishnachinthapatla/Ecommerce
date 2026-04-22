@@ -103,13 +103,11 @@ class Store(BaseModel):
         blank=True,
         related_name="staff_stores"  
     )
-
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="owned_stores" 
     )
-
     address = models.TextField()
     contact_email = models.EmailField()
     contact_phone = models.CharField(max_length=15)
@@ -118,11 +116,10 @@ class Store(BaseModel):
         return self.name or "store"
 
 
-
 class Category(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     name = models.CharField(max_length=100)
+
     slug = models.SlugField(unique=True)
     description = models.TextField(blank=True)
 
@@ -134,11 +131,11 @@ class Category(BaseModel):
 
 class Subcategory(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
 
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
+
     description = models.TextField(blank=True)
 
     def __str__(self):
@@ -148,18 +145,18 @@ class Subcategory(BaseModel):
 
 class Product(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     sku = models.CharField(max_length=50, unique=True)
+
     name = models.CharField(max_length=255)
     description = models.TextField()
 
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
     subcategory = models.ForeignKey(Subcategory, on_delete=models.CASCADE)
+
     store = models.ForeignKey(Store, on_delete=models.CASCADE)
-
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    inventory_count = models.IntegerField(default=0)
 
+    inventory_count = models.IntegerField(default=0)
     attributes = models.JSONField(blank=True, null=True)
 
     def __str__(self):
@@ -168,17 +165,16 @@ class Product(BaseModel):
 
 class ProductImage(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
+
     image = models.ImageField(upload_to='products/')
     alt_text = models.CharField(max_length=255, blank=True)
-    order = models.IntegerField(default=0)
 
+    order = models.IntegerField(default=0)
 
 
 class Address(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
 
     name = models.CharField(max_length=255, blank=True)
@@ -189,6 +185,7 @@ class Address(BaseModel):
 
     city = models.CharField(max_length=100)
     state = models.CharField(max_length=100)
+
     pincode = models.CharField(max_length=10)
     country = models.CharField(max_length=100)
 
@@ -199,7 +196,6 @@ class Address(BaseModel):
 
 class Cart(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -208,15 +204,13 @@ class Cart(BaseModel):
 
 class CartItem(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     quantity = models.IntegerField(default=1)
 
     def __str__(self):
         return f"{self.product.name} x {self.quantity}"
-
 
 
 class Order(BaseModel):
@@ -229,10 +223,9 @@ class Order(BaseModel):
     )
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
-    store = models.ForeignKey(Store, on_delete=models.CASCADE)
 
+    store = models.ForeignKey(Store, on_delete=models.CASCADE)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
     shipping_address = models.ForeignKey(Address, related_name='shipping_orders', on_delete=models.SET_NULL, null=True)
@@ -246,27 +239,25 @@ class Order(BaseModel):
 
 class OrderDetail(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items')
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
 
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     sku = models.CharField(max_length=50)
+
     quantity = models.IntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
-    line_total = models.DecimalField(max_digits=10, decimal_places=2)
 
+    line_total = models.DecimalField(max_digits=10, decimal_places=2)
 
 
 class Payment(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
     payment_method = models.CharField(max_length=50)
     transaction_id = models.CharField(max_length=255)
 
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-
     status = models.CharField(max_length=20, choices=[
         ('INITIATED', 'Initiated'),
         ('SUCCESS', 'Success'),
@@ -279,17 +270,15 @@ class Payment(BaseModel):
 
 class Invoice(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
 
     invoice_number = models.CharField(max_length=100, unique=True)
-
     issued_at = models.DateTimeField()
+
     due_at = models.DateTimeField()
-
     amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    taxes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
 
+    taxes = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     notes = models.TextField(blank=True)
 
     def __str__(self):
