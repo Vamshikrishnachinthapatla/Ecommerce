@@ -216,7 +216,7 @@ class InvoiceViewSet(viewsets.ModelViewSet):
 
 
 # ---------------- AUTH ----------------
-
+# AdminLoginView
 class AdminLoginView(APIView):
     def post(self, request):
         user = User.objects.filter(email=request.data.get("email")).first()
@@ -231,7 +231,7 @@ class AdminLoginView(APIView):
 
         return Response({"error": "invalid_credentials"}, status=401)
 
-
+#customer login view
 class CustomerLoginView(APIView):
     def post(self, request):
         user = User.objects.filter(mobile_number=request.data.get("mobile_number")).first()
