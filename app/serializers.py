@@ -20,7 +20,7 @@ class UserCreateSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
-
+#Store serializer
 class StoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Store
