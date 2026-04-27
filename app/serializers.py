@@ -30,26 +30,50 @@ class StoreSerializer(serializers.ModelSerializer):
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
         model = Category
-        fields = "__all__"
-
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+        ]
 
 class SubcategorySerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+
     class Meta:
         model = Subcategory
-        fields = "__all__"
+        fields = [
+            "id",
+            "name",
+            "slug",
+            "description",
+            "category_name",
+        ]
 
 
 class ProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = "__all__"
-
+        fields = [
+            "id",
+            "sku",
+            "name",
+            "price",
+            "inventory_count",
+            "description",
+        ]
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
-        fields = "__all__"
-
+        fields = [
+            "id",
+            "sku",
+            "name",
+            "price",
+            "inventory_count",
+            "description",
+        ]
 
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
@@ -83,11 +107,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
-    items = OrderItemSerializer(many=True, read_only=True)
+    item_count = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ["id", "total_amount", "status", "items", "cdate"]
+        fields = ["id", "total_amount", "status", "item_count"]
+
+    def get_item_count(self, obj):
+        return obj.items.count()
 
 
 class CreateOrderSerializer(serializers.Serializer):
