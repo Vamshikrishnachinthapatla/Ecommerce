@@ -109,7 +109,9 @@ class Store(BaseModel):
     )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
         related_name="owned_stores" 
     )
     address = models.TextField()
@@ -200,6 +202,14 @@ class Address(BaseModel):
 
 class Cart(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE
+    )
+
     def __str__(self):
         return f"cart-{self.id}"
 

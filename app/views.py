@@ -45,10 +45,11 @@ class IsStoreStaffOrAdmin(permissions.BasePermission):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.filter(is_deleted=False)
     serializer_class = UserSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAdminUser]
 
 
 class RegisterView(APIView):
+    permission_classes = [permissions.AllowAny]
     def post(self, request):
         serializer = UserCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -228,8 +229,9 @@ class AddToCartView(APIView):
                 "quantity": item.quantity
             })
 
-        except Exception:
-            raise ValidationError("invalid_cart_request")
+        except Exception as e:
+            print("ERROR:", str(e))
+            raise ValidationError(str(e))
 
 
 class RemoveFromCartView(APIView):
