@@ -81,7 +81,11 @@ class User(AbstractBaseUser, PermissionsMixin, BaseModel):
     is_customer = models.BooleanField(default=True)
     is_active = models.BooleanField(default=True)
 
-    otp = models.CharField(max_length=6, default='1234')
+    otp = models.CharField(max_length=6, null=True, blank=True)
+    otp_created_at = models.DateTimeField(null=True, blank=True)
+
+    provider = models.CharField(max_length=50, blank=True)
+    currency = models.CharField(max_length=10, default="INR")
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
@@ -196,8 +200,6 @@ class Address(BaseModel):
 
 class Cart(BaseModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.CASCADE)
-
     def __str__(self):
         return f"cart-{self.id}"
 

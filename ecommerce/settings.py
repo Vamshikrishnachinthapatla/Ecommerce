@@ -141,3 +141,7 @@ SIMPLE_JWT = {
 
     'AUTH_HEADER_TYPES': ('Bearer',),
 }
+
+
+RAZORPAY_KEY = "rzp_test_xxxxxxxxx"
+RAZORPAY_SECRET = "xxxxxxxxxxxxxxx"

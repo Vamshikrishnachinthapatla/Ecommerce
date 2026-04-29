@@ -12,7 +12,8 @@ from .views import (
     CartView, AddToCartView, RemoveFromCartView,
     OrderViewSet,
     PaymentViewSet, InvoiceViewSet,
-    AddressViewSet
+    AddressViewSet, SendOTPView, VerifyOTPView, 
+    CreatePaymentView, FakePaymentVerifyView,
 )
 
 router = DefaultRouter()
@@ -37,6 +38,10 @@ urlpatterns = [
     path('auth/admin/login/', AdminLoginView.as_view()),
     path('auth/customer/login/', CustomerLoginView.as_view()),
     path('auth/token/refresh/', TokenRefreshView.as_view()),
+    path('auth/send-otp/', SendOTPView.as_view()),
+    path('auth/verify-otp/', VerifyOTPView.as_view()),
+    path('payments/create/', CreatePaymentView.as_view()),
+    path('payments/verify/', FakePaymentVerifyView.as_view()),
     path('', include(router.urls)),
 
 ]

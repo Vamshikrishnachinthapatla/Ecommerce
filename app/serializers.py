@@ -38,6 +38,9 @@ class CategorySerializer(serializers.ModelSerializer):
         ]
 
 class SubcategorySerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all()
+    )
     category_name = serializers.CharField(source="category.name", read_only=True)
 
     class Meta:
@@ -47,32 +50,49 @@ class SubcategorySerializer(serializers.ModelSerializer):
             "name",
             "slug",
             "description",
+            "category",
             "category_name",
         ]
 
 
 class ProductSerializer(serializers.ModelSerializer):
+    category_name = serializers.CharField(source="category.name", read_only=True)
+    subcategory_name = serializers.CharField(source="subcategory.name", read_only=True)
+
     class Meta:
         model = Product
         fields = [
             "id",
             "sku",
             "name",
+            "description",
             "price",
             "inventory_count",
-            "description",
+            "category",
+            "category_name",
+            "subcategory",
+            "subcategory_name",
         ]
+        
 
 class ProductCreateUpdateSerializer(serializers.ModelSerializer):
+    category = serializers.PrimaryKeyRelatedField(
+        queryset=Category.objects.all()
+    )
+    subcategory = serializers.PrimaryKeyRelatedField(
+        queryset=Subcategory.objects.all()
+    )
+
     class Meta:
         model = Product
         fields = [
-            "id",
             "sku",
             "name",
             "price",
             "inventory_count",
             "description",
+            "category",
+            "subcategory",   # 👈 REQUIRED
         ]
 
 class AddressSerializer(serializers.ModelSerializer):

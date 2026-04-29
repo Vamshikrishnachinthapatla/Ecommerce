@@ -7,6 +7,22 @@ from django.db import transaction
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import *
 from .serializers import *
+from .models import Store
+from django.utils import timezone
+import random
+
+from rest_framework.response import Response
+from rest_framework import status
+
+from datetime import timedelta
+from django.utils import timezone
+
+import uuid
+
+
+
+import razorpay
+from django.conf import settings
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -42,6 +58,105 @@ class RegisterView(APIView):
             "data": UserSerializer(user).data
         })
 
+class SendOTPView(APIView):
+    def post(self, request):
+        mobile = request.data.get("mobile_number")
+
+        if not mobile:
+            raise ValidationError("mobile_required")
+
+        user, _ = User.objects.get_or_create(mobile_number=mobile)
+
+        otp = str(random.randint(100000, 999999))
+
+        user.otp = otp
+        user.otp_created_at = timezone.now()
+        user.save(update_fields=["otp", "otp_created_at"])
+
+        # TODO: integrate SMS provider (Twilio, MSG91)
+        print("OTP:", otp)
+
+        return Response({"message": "otp_sent"})
+
+
+class VerifyOTPView(APIView):
+    def post(self, request):
+        mobile = request.data.get("mobile_number")
+        otp = request.data.get("otp")
+
+        user = User.objects.filter(mobile_number=mobile).first()
+
+        if not user:
+            raise ValidationError("user_not_found")
+
+        # Expiry check (5 minutes)
+        if not user.otp_created_at or timezone.now() > user.otp_created_at + timedelta(minutes=2):
+            raise ValidationError("otp_expired")
+
+        if user.otp != otp:
+            raise ValidationError("invalid_otp")
+
+        # Clear OTP after use
+        user.otp = None
+        user.save(update_fields=["otp"])
+
+        token = RefreshToken.for_user(user)
+
+        return Response({
+            "access": str(token.access_token),
+            "refresh": str(token),
+            "role": "customer"
+        })
+
+
+class CreatePaymentView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        order_id = request.data.get("order_id")
+        order = get_object_or_404(Order, id=order_id)
+
+        payment = Payment.objects.create(
+            order=order,
+            payment_method="FAKE",
+            transaction_id=str(uuid.uuid4()),
+            amount=order.total_amount,
+            status="INITIATED"
+        )
+
+        return Response({
+            "payment_id": payment.id,
+            "status": payment.status,
+            "amount": payment.amount
+        })
+
+    
+
+class FakePaymentVerifyView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        payment_id = request.data.get("payment_id")
+        status = request.data.get("status")  # SUCCESS / FAILED
+
+        payment = get_object_or_404(Payment, id=payment_id)
+
+        if payment.status == "SUCCESS":
+            return Response({"message": "already_paid"})
+
+        payment.status = status
+        payment.save(update_fields=["status"])
+
+        if status == "SUCCESS":
+            payment.order.status = "PAID"
+            payment.order.save(update_fields=["status"])
+
+        return Response({
+            "message": "payment_processed",
+            "order_status": payment.order.status
+        })
+    
+
 
 class StoreViewSet(viewsets.ModelViewSet):
     queryset = Store.objects.filter(is_deleted=False)
@@ -72,6 +187,11 @@ class ProductViewSet(viewsets.ModelViewSet):
             return ProductCreateUpdateSerializer
         return ProductSerializer
 
+    def perform_create(self, serializer):
+        store = Store.objects.get(owner=self.request.user)
+        serializer.save(store=store)  # 👈 FIX
+
+    
 
 class AddressViewSet(viewsets.ModelViewSet):
     queryset = Address.objects.filter(is_deleted=False)
@@ -125,6 +245,8 @@ class RemoveFromCartView(APIView):
         return Response({"message": "removed_from_cart"})
 
 
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.filter(is_deleted=False)
     permission_classes = [permissions.IsAuthenticated]
@@ -137,8 +259,11 @@ class OrderViewSet(viewsets.ModelViewSet):
         return CreateOrderSerializer if self.action == "create" else OrderSerializer
 
     @transaction.atomic
-    def perform_create(self, serializer):
-        user = self.request.user
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        user = request.user
         data = serializer.validated_data
 
         cart = Cart.objects.filter(user=user).first()
@@ -188,7 +313,7 @@ class OrderViewSet(viewsets.ModelViewSet):
             "message": "order_created",
             "order_id": order.id,
             "total": total
-        })
+        }, status=status.HTTP_201_CREATED)
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
