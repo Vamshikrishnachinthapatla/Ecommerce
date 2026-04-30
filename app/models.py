@@ -274,11 +274,7 @@ class Payment(BaseModel):
         ('INITIATED', 'Initiated'),
         ('SUCCESS', 'Success'),
         ('FAILED', 'Failed'),
-    ],
-    default='INITIATED'
-    )
-
-
+    ])
 
     paid_at = models.DateTimeField(null=True, blank=True)
 

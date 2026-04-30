@@ -98,7 +98,7 @@ class ProductCreateUpdateSerializer(serializers.ModelSerializer):
 class AddressSerializer(serializers.ModelSerializer):
     class Meta:
         model = Address
-        fields = ["cuser", "muser", "is_deleted", "is_suspended"]
+        fields = "__all__"
 
 
 class CartItemSerializer(serializers.ModelSerializer):
@@ -154,7 +154,6 @@ class CreateOrderSerializer(serializers.Serializer):
 class PaymentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Payment
-        read_only_fields = ["transaction_id", "status", "amount"]
         fields = "__all__"
 
 
