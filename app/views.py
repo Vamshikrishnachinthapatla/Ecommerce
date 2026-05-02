@@ -146,11 +146,23 @@ class FakePaymentVerifyView(APIView):
             return Response({"message": "already_paid"})
 
         payment.status = status
-        payment.save(update_fields=["status"])
 
         if status == "SUCCESS":
+            payment.paid_at = timezone.now()
             payment.order.status = "PAID"
             payment.order.save(update_fields=["status"])
+
+            # ✅ CREATE INVOICE
+            Invoice.objects.create(
+                order=payment.order,
+                invoice_number=f"INV-{uuid.uuid4().hex[:8].upper()}",
+                issued_at=timezone.now(),
+                due_at=timezone.now(),
+                amount=payment.amount,
+                taxes=0  # you can calculate later
+            )
+
+        payment.save(update_fields=["status", "paid_at"])
 
         return Response({
             "message": "payment_processed",
@@ -329,6 +341,10 @@ class InvoiceViewSet(viewsets.ModelViewSet):
     serializer_class = InvoiceSerializer
     permission_classes = [permissions.IsAuthenticated]
 
+    def get_queryset(self):
+        user = self.request.user
+        return Invoice.objects.filter(order__user=user, is_deleted=False)
+
 
 class AdminLoginView(APIView):
     def post(self, request):
@@ -358,3 +374,50 @@ class CustomerLoginView(APIView):
             })
 
         return Response({"error": "invalid_otp"}, status=400)
+
+
+class WishlistViewSet(viewsets.ModelViewSet):
+    queryset = Wishlist.objects.all()
+    serializer_class = WishlistSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Wishlist.objects.filter(
+            user=self.request.user,
+            is_deleted=False
+        ).select_related("product")
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class WishlistToggleView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        product_id = request.data.get("product_id")
+
+        if not product_id:
+            raise ValidationError("product_id_required")
+        
+        product = get_object_or_404(Product, id=product_id)
+
+        wishlist_item = Wishlist.objects.filter(
+            user=request.user, product=product, is_deleted=False).first()
+        
+        if wishlist_item:
+            wishlist_item.delete()
+            return Response({
+                "status":"removed",
+                "message":"Product removed from wishlist"
+            })
+        Wishlist.objects.create(
+            user=request.user, 
+            product=product
+        )
+
+        return Response({
+            "status":"added",
+            "message":"Prodcut added to wishlist"
+        })
+

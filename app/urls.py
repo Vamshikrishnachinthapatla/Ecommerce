@@ -2,19 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from .views import AdminLoginView, CustomerLoginView
 from rest_framework_simplejwt.views import TokenRefreshView
-
-
-from .views import (
-    UserViewSet, RegisterView,
-    StoreViewSet,
-    CategoryViewSet, SubcategoryViewSet,
-    ProductViewSet,
-    CartView, AddToCartView, RemoveFromCartView,
-    OrderViewSet,
-    PaymentViewSet, InvoiceViewSet,
-    AddressViewSet, SendOTPView, VerifyOTPView, 
-    CreatePaymentView, FakePaymentVerifyView,
-)
+from .views import *
 
 router = DefaultRouter()
 router.register('users', UserViewSet)
@@ -25,6 +13,7 @@ router.register('products', ProductViewSet)
 router.register('orders', OrderViewSet)
 router.register('payments', PaymentViewSet)
 router.register('invoices', InvoiceViewSet)
+router.register('wishlist', WishlistViewSet, basename='wishlist')
 router.register('addresses', AddressViewSet)
 
 urlpatterns = [
@@ -42,6 +31,7 @@ urlpatterns = [
     path('auth/verify-otp/', VerifyOTPView.as_view()),
     path('payments/create/', CreatePaymentView.as_view()),
     path('payments/verify/', FakePaymentVerifyView.as_view()),
+    path('wishlist/toggle/', WishlistToggleView.as_view()),
     path('', include(router.urls)),
 
 ]

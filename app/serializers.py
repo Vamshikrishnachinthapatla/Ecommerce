@@ -158,6 +158,30 @@ class PaymentSerializer(serializers.ModelSerializer):
 
 
 class InvoiceSerializer(serializers.ModelSerializer):
+    order_id = serializers.UUIDField(source="order.id", read_only=True)
+    total = serializers.SerializerMethodField()
+
     class Meta:
         model = Invoice
-        fields = "__all__"
+        fields = [
+            "invoice_number",
+            "order_id",
+            "amount",
+            "taxes",
+            "total",
+            "issued_at",
+        ]
+
+    def get_total(self, obj):
+        return obj.amount + obj.taxes
+    
+
+class WishlistSerializer(serializers.ModelSerializer):
+    product = serializers.PrimaryKeyRelatedField(
+        queryset=Product.objects.all()
+    )
+    product_details = ProductSerializer(source="product", read_only=True)
+
+    class Meta:
+        model = Wishlist
+        fields = ["id", "product", "product_details"]
