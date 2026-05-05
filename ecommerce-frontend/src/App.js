@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import API from "./api";
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Payment from "./pages/Payment";
@@ -10,6 +11,7 @@ function App() {
   const [products, setProducts] = useState([]);
   const [page, setPage] = useState("products");
   const [orderId, setOrderId] = useState(null);
+  const [authPage, setAuthPage] = useState("login"); // 🔥 login/register toggle
   const [isLoggedIn, setIsLoggedIn] = useState(
     !!localStorage.getItem("token")
   );
@@ -41,8 +43,18 @@ function App() {
     }
   };
 
+  // 🔐 AUTH FLOW (FIXED)
   if (!isLoggedIn) {
-    return <Login onLogin={() => setIsLoggedIn(true)} />;
+    return authPage === "login" ? (
+      <Login
+        onLogin={() => setIsLoggedIn(true)}
+        onSwitchToRegister={() => setAuthPage("register")}
+      />
+    ) : (
+      <Register
+        onSwitchToLogin={() => setAuthPage("login")}
+      />
+    );
   }
 
   return (
@@ -58,6 +70,7 @@ function App() {
             onClick={() => {
               localStorage.removeItem("token");
               setIsLoggedIn(false);
+              setAuthPage("login"); // reset auth page
             }}
           >
             Logout
@@ -66,11 +79,12 @@ function App() {
       </div>
 
       <div className="container">
-        {/* Pages */}
+        {/* 🛒 Cart */}
         {page === "cart" && (
           <Cart onCheckout={() => setPage("checkout")} />
         )}
 
+        {/* 📦 Checkout */}
         {page === "checkout" && (
           <Checkout
             onSuccess={(orderId) => {
@@ -80,10 +94,12 @@ function App() {
           />
         )}
 
+        {/* 💳 Payment */}
         {page === "payment" && (
           <Payment orderId={orderId} />
         )}
 
+        {/* 🛍️ Products */}
         {page === "products" && (
           <>
             <h2>Products</h2>
