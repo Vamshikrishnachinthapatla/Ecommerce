@@ -193,7 +193,14 @@ class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_deleted=False)
     filter_backends = [filters.SearchFilter]
     search_fields = ["name", "description"]
-    permission_classes = [IsStoreStaffOrAdmin]
+
+    def get_permissions(self):
+        # ✅ PUBLIC access for GET (list, retrieve)
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+
+        # 🔒 Protected for POST, PUT, DELETE
+        return [IsStoreStaffOrAdmin()]
 
     def get_serializer_class(self):
         if self.action in ["create", "update", "partial_update"]:
@@ -202,7 +209,7 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         store = Store.objects.get(owner=self.request.user)
-        serializer.save(store=store)  # 👈 FIX
+        serializer.save(store=store) # 👈 FIX
 
     
 
@@ -224,7 +231,7 @@ class CartView(APIView):
 
 
 class AddToCartView(APIView):
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.AllowAny]
 
     def post(self, request):
         try:

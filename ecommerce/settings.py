@@ -38,7 +38,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
-    'app'
+    'app',
+
+    'corsheaders',
+
+
 ]
 
 MIDDLEWARE = [
@@ -49,6 +53,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
 ROOT_URLCONF = 'ecommerce.urls'
@@ -145,3 +151,6 @@ SIMPLE_JWT = {
 
 RAZORPAY_KEY = "rzp_test_xxxxxxxxx"
 RAZORPAY_SECRET = "xxxxxxxxxxxxxxx"
+
+
+CORS_ALLOW_ALL_ORIGINS = True
